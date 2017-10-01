@@ -9,8 +9,26 @@ This section covers the following topics:
 
 ## Probability
 
-READING:  *AIMA Chapter 13*
-
+- READING:  *AIMA Chapter 13*
+- [Rabiner's Tutorial](http://www.cs.ubc.ca/~murphyk/Bayes/rabiner.pdf) and [Errata](http://alumni.media.mit.edu/~rahimi/rabiner/rabiner-errata/)
+- [Thad Starner's MS Thesis](http://dspace.mit.edu/bitstream/handle/1721.1/29089/32601581-MIT.pdf)
+- [HTK toolkit](http://htk.eng.cam.ac.uk/)
+- [The Fundamentals of HTK](http://speech.ee.ntu.edu.tw/homework/DSP_HW2-1/htkbook.pdf) or [HTML version](http://www.ee.columbia.edu/ln/LabROSA/doc/HTKBook21/HTKBook.html)
+- [Hidden Markov Models for Speech Recognition(BOOK)](http://www.amazon.com/Hidden-Recognition-Edinburgh-Information-Technology/dp/0748601627)
+- [HMM used in genetics (slides)](http://www.cs.columbia.edu/4761/notes07/chapter4.1-HMM.pdf)
+- Sebastian Thrun & Peter Norvig's course
+		- [HMM and Kalman Fiters](https://classroom.udacity.com/courses/cs271/lessons/48734405/concepts/last-viewed)
+		- [NLP I](https://classroom.udacity.com/courses/cs271/lessons/48641663/concepts/last-viewed)
+		- [NLP II](https://classroom.udacity.com/courses/cs271/lessons/48734403/concepts/last-viewed)
+- Segmentally Boosted HMM
+		- [SBHMM project at Georgia Tech](http://www.cc.gatech.edu/cpl/projects/sbhmm/)
+		- [HTK part](http://htk.eng.cam.ac.uk/)
+		- [Gesture and Activity Recognition Toolkit](https://wiki.cc.gatech.edu/ccg/projects/gt2k/gt2k)
+		- [Pei Yin's Dissertation on using SBHMM]https://smartech.gatech.edu/handle/1853/33939)
+- HMMs for Speech Synthesis
+		- [Junichi Yamagishi’s An Introduction to HMM-Based Speech Synthesis](https://wiki.inf.ed.ac.uk/twiki/pub/CSTR/TrajectoryModelling/HTS-Introduction.pdf)
+		- [Heiga Zen’s Deep Learning in Speech Synthesis](http://static.googleusercontent.com/media/research.google.com/en//pubs/archive/41539.pdf)
+		- [DeepMind's WaveNet](https://deepmind.com/blog/wavenet-generative-model-raw-audio/)
 >The **Bayes Network** is a compact representation of a distribution over this very large joint probability distribution of all of these variables
 
 Steps:
@@ -114,4 +132,94 @@ where B is *observable* and A is *not observable*
 
 ## Hidden Markov Model
 
-Working with time series
+- Dolphin whistles
+	- delta frequency (only care about the successive differences) -- ignore the absolute magnitude
+	- time warping -- deal with signals extended or contracted in time
+		- Euclidean Distance: padding and calculate Euclidean distances
+		- Dynamic Time Warping: matching two signals in as in 2D
+			- Sakoe Chiba Bounds
+			- [Further reading](http://wearables.cc.gatech.edu/paper_of_week/DTW_myths.pdf)
+
+- HMM: good for pattern recognition in time series
+
+### Representation of HMM
+
+- $X_i$ represents a frame of data
+- $E_i$ represents the output of the state
+- $X_i$ transits according to Markov Chain, each $X_i$ has the output as $E_i$
+
+- output distribution: the distribution from $X_i$ generates $E_i$
+- transition probability between $X_i$ and $X_{i + 1}$
+- self-loop: a state can stay at its own state $X_i$ to $X_i$
+- use *dummy state* to enter the first state
+
+### Viterbi Algorithm
+
+We can layout a $n(state) \times n(time)$ grids and map out the transition probability as well as the probability of each observation.
+
+Then we can use Dynamic Programming to calculate the maximum probability path from start to the end.
+- The probability is the `product` of all the probability along the path, including both **transition probability** and **the probability of an observation**.
+- In practice, we use `sum log(prob)`
+- in the end we get: `p(observation | model)`
+
+### Recognization
+
+For different models, we have different `p(observation | model)`, and we pick the model that can maximize the probability
+
+### HMM Training
+
+- 5 - 12 examples are minimal for training each model.
+- A) get the transition probability
+	- different length of signals -- cut them each into similar segments (three states, then three segments)
+	- average the length of each segments can provide information for the transition probability (e.g. `average length = 4` --> `p = 0.25` to go to the next state)
+	- then get the self-loop transition probability
+- B) get the observation distribution
+	- for all the data in each segment, we can use mean/std to construct a probability distribution for `p(output | state)`
+- iterative update A), B)
+	- set transition probability and update the observation distribution
+		- for each observation: we need to recalculate which state it belongs to by comparing neighboring `p(output | state)`, and assign to the MLE state
+		- thus, we update the transition segmentation based on the observation distribution
+	- set observation distribution and update the transition probability
+	- until converge
+- quite similar to EM or K-means algorithm in update
+- **Baum Welch** re-estimation
+	- similar to EM
+	- forward-backward process
+- Multidimensional distribution and Mixture Gaussian distributions
+
+### HMM topology
+
+- linear chain state
+- loop in the model chain
+- multiple model for the same signal of different variants -- we can increase the our vocabulary
+- even more complicated graph / network
+
+### Stochastic Beam Search
+
+- prune some low probability path. But we don't want to drop the low probability path entirely because later it may be good
+- **keep the paths randomly in proportion with their probability**
+
+### Context Training
+
+- a phrase of signs is different from individual word signs.
+- transition between words may be combined in sign languages.
+- instead of training on each single word, we make a combined *phrase* model that train on a whole phrase (e.g. I NEED CATS).
+- when training:
+	- first divide between each signs in a phrase
+	- then divide the data within a sign
+- error rate can drop in half
+
+### statistical grammar
+
+- use statistical regularities among word transition
+- error rate can drop to 1/4
+
+### State Typing
+
+- Two models of signs may share some part of the states
+
+### Segmentally Boosted HMMs
+
+- Align the model and data
+- Boost the model by asking which features help most to differentiate the data from a chosen state versus the rest of the state
+- Weight the dimensions appropriately in the HMM
