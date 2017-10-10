@@ -184,7 +184,26 @@ class IsolationPlayer:
         self.score = score_fn
         self.time_left = None
         self.TIMER_THRESHOLD = timeout
+        self.MAX_VALUE = float("inf")
+        self.MIN_VALUE = float("-inf")
 
+    def check_move(self, game, depth, max_level = True):
+        if self.time_left() < self.TIMER_THRESHOLD:
+            raise SearchTimeout()
+
+        legal_moves = game.get_legal_moves()
+        if not legal_moves or depth == 0:
+            moves = (-1, -1)
+            stop_search = True
+            if max_level:
+                score = self.score(game, game.active_player)
+            else:
+                score = self.score(game, game.inactive_player)
+        else:
+            moves = legal_moves
+            stop_search = False
+            score = 0
+        return stop_search, moves, score
 
 class MinimaxPlayer(IsolationPlayer):
     """Game-playing agent that chooses a move using depth-limited minimax
@@ -280,15 +299,13 @@ class MinimaxPlayer(IsolationPlayer):
             raise SearchTimeout()
 
         # Implement the minmax algorithm
-        legal_moves = game.get_legal_moves()
-        if not legal_moves:
-            return (-1, -1)
-        scores, move = max([(self.min_val(game.forecast_move(move), depth - 1), move)
-                        for move in legal_moves])
+        _, move = self.minmax_val_move(game, depth, max_level = True)
+        #scores, move = max([(self.min_val(game.forecast_move(move), depth - 1), move)
+        #                for move in legal_moves])
         return move
 
-    def max_val(self, game, depth):
-        """Implement Max-value-level search
+    def minmax_val_move(self, game, depth, max_level = True):
+        """Implement Min-Max-value-level search
 
         Parameters
         ----------
@@ -300,45 +317,25 @@ class MinimaxPlayer(IsolationPlayer):
             Depth is an integer representing the maximum number of plies to
             search in the game tree before aborting
 
-        Returns
-        -------
-        int
-            Maximum Score of the all legal moves
-        """
-        if self.time_left() < self.TIMER_THRESHOLD:
-            raise SearchTimeout()
-
-        legal_moves = game.get_legal_moves()
-        if not legal_moves or depth == 0:
-            return self.score(game, game.active_player)
-        return max([self.min_val(game.forecast_move(move), depth - 1) for move in legal_moves])
-
-    def min_val(self, game, depth):
-        """Implement Min-value-level search
-
-        Parameters
-        ----------
-        game : isolation.Board
-            An instance of the Isolation game `Board` class representing the
-            current game state
-
-        depth : int
-            Depth is an integer representing the maximum number of plies to
-            search in the game tree before aborting
+        max_level: bool
+            Whether the current layer is a maximum level or a minimum level
 
         Returns
         -------
         int
-            Minimum Score of the all legal moves
+            Maximum / Minimum Score of the all legal moves
+        move
+            Corresponding move
         """
-        if self.time_left() < self.TIMER_THRESHOLD:
-            raise SearchTimeout()
+        stop_search, moves, score = self.check_move(game, depth, max_level)
+        if stop_search:
+            return score, moves
 
-        legal_moves = game.get_legal_moves()
-        if not legal_moves or depth == 0:
-            return self.score(game, game.inactive_player)
-        return min([self.max_val(game.forecast_move(move), depth - 1) for move in legal_moves])
-
+        search = sorted([(self.minmax_val_move(game.forecast_move(move),
+                                               depth - 1, not max_level)[0],
+                          move) for move in moves],
+                          reverse = max_level)
+        return search[0]
 
 class AlphaBetaPlayer(IsolationPlayer):
     """Game-playing agent that chooses a move using iterative deepening minimax
@@ -446,10 +443,6 @@ class AlphaBetaPlayer(IsolationPlayer):
             raise SearchTimeout()
 
         # Implement alpha-beta-pruning
-        legal_moves = game.get_legal_moves()
-        if not legal_moves:
-            return (-1, -1)
-
         _, move = self.alpha_beta_max_val(game, depth, alpha, beta)
         return move
 
@@ -477,14 +470,12 @@ class AlphaBetaPlayer(IsolationPlayer):
         int
             Maximum Score of the all legal moves
         """
-        if self.time_left() < self.TIMER_THRESHOLD:
-            raise SearchTimeout()
+        stop_search, legal_moves, score = self.check_move(game, depth, max_level = True)
+        if stop_search:
+            return score, legal_moves
 
         best_move = (-1, -1)
-        legal_moves = game.get_legal_moves()
-        if not legal_moves or depth == 0:
-            return self.score(game, game.active_player), best_move
-        best_value = float("-inf")
+        best_value = self.MIN_VALUE
         for move in legal_moves:
             value, _ = self.alpha_beta_min_val(game.forecast_move(move), depth - 1, alpha, beta)
             if value > best_value:
@@ -518,15 +509,12 @@ class AlphaBetaPlayer(IsolationPlayer):
         int
             Minimum Score of the all legal moves
         """
-        if self.time_left() < self.TIMER_THRESHOLD:
-            raise SearchTimeout()
+        stop_search, legal_moves, score = self.check_move(game, depth, max_level = False)
+        if stop_search:
+            return score, legal_moves
 
         best_move = (-1, -1)
-        legal_moves = game.get_legal_moves()
-        if not legal_moves or depth == 0:
-            return self.score(game, game.inactive_player), best_move
-
-        best_value = float("inf")
+        best_value = self.MAX_VALUE
         for move in legal_moves:
             value, val_move = self.alpha_beta_max_val(game.forecast_move(move), depth - 1, alpha, beta)
             if value < best_value:

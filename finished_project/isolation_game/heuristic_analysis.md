@@ -99,4 +99,8 @@ My `custom_score` and `custom_score_2` evaluation function can outperforms the `
 
 My evaluation functions look forward the next `k` steps, and calculate the number of possible destination in all these `k` steps. They provide a better evaluation of the current state than the number of next legal moves. The difference between the number of possible destinations for each player is a better evaluation than the number of possible destinations of a single player. This may be because of the competitive nature of the isolation game.
 
-To achieve a higher probability of winning, I suggest using my `custom_score` function, with `k == 3`. For a better computer, we may choose a larger `k`.
+To achieve a higher probability of winning, I suggest using my `custom_score` function. There are several reasons for this recommendation:
+
+1. It is the best score. It is consistently better than the `AB_Improved`
+3. It is fast and easy to scale. The parameter `k` can be tuned according to the computer than runs the program. If the computer is super fast, when we can simply increase the number `k` and can get better valuation score. If the computer is slow, we can decrease `k`. We don't need to change other parts of the code, and this score is quite scalable. In contrast, other scores don't have the potential to provide a better evaluation of the current board state, even if the program is running on a fast computer.
+2. This is easy to implement. The main idea is similar to limited depth BFS, and it is a natural extension of the `AB_Improved` score

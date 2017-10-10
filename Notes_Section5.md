@@ -7,7 +7,7 @@ This section covers the following topics:
 - Inference on Bayes Nets
 - Hidden Markov Model
 
-## Probability
+## Referece
 
 - READING:  *AIMA Chapter 13*
 - [Rabiner's Tutorial](http://www.cs.ubc.ca/~murphyk/Bayes/rabiner.pdf) and [Errata](http://alumni.media.mit.edu/~rahimi/rabiner/rabiner-errata/)
@@ -29,6 +29,9 @@ This section covers the following topics:
 		- [Junichi Yamagishi’s An Introduction to HMM-Based Speech Synthesis](https://wiki.inf.ed.ac.uk/twiki/pub/CSTR/TrajectoryModelling/HTS-Introduction.pdf)
 		- [Heiga Zen’s Deep Learning in Speech Synthesis](http://static.googleusercontent.com/media/research.google.com/en//pubs/archive/41539.pdf)
 		- [DeepMind's WaveNet](https://deepmind.com/blog/wavenet-generative-model-raw-audio/)
+
+## Probability
+
 >The **Bayes Network** is a compact representation of a distribution over this very large joint probability distribution of all of these variables
 
 Steps:

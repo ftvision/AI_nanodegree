@@ -6,4 +6,13 @@
   - or we can use `game.inactive_player` in the `min_val()` and `game.active_player` in the `max_val()` function  
 
 2. In the `class AlphaBetaPlayer`, the pruning starts from the first `max` level by using `alpha_beta_max_val()`.
-  - Similarly, we have the `self.score()` function ALWAYS evaluate the states from the root player's perspective 
+  - Similarly, we have the `self.score()` function ALWAYS evaluate the states from the root player's perspective
+
+# Review Notes
+
+- Helpful reading for better practice:
+  1. [Style](https://google.github.io/styleguide/pyguide.html)
+  2. [Logging](https://docs.python.org/3/library/logging.html)
+  3. [Debugging](https://docs.python.org/3/library/pdb.html)
+
+- Refactor the min-max algorithm
