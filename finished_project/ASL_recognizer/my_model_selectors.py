@@ -172,3 +172,35 @@ class SelectorCV(ModelSelector):
         if self.verbose:
             print("Best model for {} with {} states, its mean logL is {}".format(self.this_word, best_num_components, best_score))
         return self.base_model(best_num_components)
+
+class SelectorCV2(ModelSelector):
+    ''' select best model based on average log Likelihood of cross-validation folds
+        Selector CV algorithm from reviewer
+    '''
+
+    def select(self):
+        warnings.filterwarnings("ignore", category=DeprecationWarning)
+
+        mean_scores = []
+
+        # Save reference to 'KFold' in variable as shown in notebook
+        split_method = KFold()
+        try:
+            for n_component in range(self.min_n_components, self.max_n_components + 1):
+                model = self.base_model(n_component)
+                # Fold and calculate model mean scores
+                fold_scores = []
+                for _, test_idx in split_method.split(self.sequences):
+                    # Get test sequences
+                    test_X, test_length = combine_sequences(test_idx, self.sequences)
+                    # Record each model score
+                    fold_scores.append(model.score(test_X, test_length))
+
+                # Compute mean of all fold scores
+                mean_scores.append(np.mean(fold_scores))
+        except Exception as e:
+            pass
+
+        num_components = range(self.min_n_components, self.max_n_components + 1)
+        states = num_components[np.argmax(mean_scores)] if mean_scores else self.n_constant
+        return self.base_model(states)
